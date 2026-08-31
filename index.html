@@ -8,12 +8,18 @@
       name="description"
       content="Mapa de sismos en tiempo real enfocado en México, con datos en vivo del USGS. Sin cuenta, sin servidor."
     />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
     <header id="app-header">
-      <h1>🌎 Sismos MX</h1>
+      <div class="brand">
+        <span class="brand-mark"></span>
+        <h1>Sismos<span class="brand-accent">MX</span></h1>
+      </div>
       <p class="subtitle">Actividad sísmica en tiempo real — datos oficiales del USGS</p>
     </header>
 
@@ -49,12 +55,12 @@
     </div>
 
     <div id="alert-controls">
-      <button id="pick-zone-btn" type="button">📍 Elegir mi zona en el mapa</button>
+      <button id="pick-zone-btn" type="button">Elegir mi zona en el mapa</button>
       <div class="control-group" id="radius-control" hidden>
         <label for="radius-range">Radio de alerta: <span id="radius-value">150</span> km</label>
         <input type="range" id="radius-range" min="25" max="500" step="25" value="150" />
       </div>
-      <button id="enable-alerts-btn" type="button" disabled>🔔 Activar alertas</button>
+      <button id="enable-alerts-btn" type="button" disabled>Activar alertas</button>
       <span id="alert-status"></span>
     </div>
 

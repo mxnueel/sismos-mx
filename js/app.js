@@ -67,7 +67,7 @@ function checkAlerts(features) {
   for (const f of newInZone) {
     const { mag, place, time } = f.properties;
     if (Notification.permission === "granted") {
-      new Notification(`🌎 Sismo ${formatMagnitude(mag)} en tu zona`, {
+      new Notification(`Sismo ${formatMagnitude(mag)} en tu zona`, {
         body: `${place}\n${formatTimeAgo(time)}`,
       });
     }
@@ -115,7 +115,7 @@ function renderQuakes(features) {
 
   const sorted = sortByTimeDesc(features);
 
-  for (const feature of sorted) {
+  sorted.forEach((feature, index) => {
     const [lon, lat, depth] = feature.geometry.coordinates;
     const { mag, place, time, url } = feature.properties;
 
@@ -133,13 +133,14 @@ function renderQuakes(features) {
 
     const li = document.createElement("li");
     li.className = "quake-item";
+    li.style.setProperty("--i", Math.min(index, 20));
     li.innerHTML = `<span class="quake-mag" style="color:${magnitudeColor(mag)}">${formatMagnitude(mag)}</span><span class="quake-place">${place}</span><br><span class="quake-time">${formatTimeAgo(time)}</span>`;
     li.addEventListener("click", () => {
       map.setView([lat, lon], 7);
       marker.openPopup();
     });
     quakeList.appendChild(li);
-  }
+  });
 }
 
 function renderHistoricQuakes() {
@@ -176,7 +177,7 @@ historicToggle.addEventListener("change", () => {
 pickZoneBtn.addEventListener("click", () => {
   pickingZone = !pickingZone;
   pickZoneBtn.classList.toggle("active", pickingZone);
-  pickZoneBtn.textContent = pickingZone ? "📍 Click en el mapa..." : "📍 Elegir mi zona en el mapa";
+  pickZoneBtn.textContent = pickingZone ? "Click en el mapa..." : "Elegir mi zona en el mapa";
 });
 
 map.on("click", (e) => {
@@ -186,7 +187,7 @@ map.on("click", (e) => {
   saveAlertZone();
   pickingZone = false;
   pickZoneBtn.classList.remove("active");
-  pickZoneBtn.textContent = "📍 Elegir mi zona en el mapa";
+  pickZoneBtn.textContent = "Elegir mi zona en el mapa";
   radiusControl.hidden = false;
   enableAlertsBtn.disabled = false;
   alertStatus.textContent = `Zona guardada (radio ${alertZone.radiusKm} km). Activa las alertas cuando quieras.`;
@@ -214,7 +215,7 @@ enableAlertsBtn.addEventListener("click", async () => {
   seenQuakeIds = new Set(lastFeatures.map((f) => f.id));
   alertsEnabled = true;
   enableAlertsBtn.classList.add("enabled");
-  enableAlertsBtn.textContent = "🔔 Alertas activas";
+  enableAlertsBtn.textContent = "Alertas activas";
   alertStatus.textContent = "Te avisaremos aquí si hay un sismo nuevo en tu zona (mientras esta pestaña esté abierta).";
 });
 
