@@ -6,6 +6,8 @@
 
 **Live: [mxnueel.github.io/sismos-mx](https://mxnueel.github.io/sismos-mx/)**
 
+![Sismos MX screenshot](docs/screenshot.png)
+
 A live earthquake map focused on Mexico, built directly on the USGS's real-time feeds — no account, no API key, no backend server. It's a static site: open it and it just works.
 
 ## Why
