@@ -1,7 +1,9 @@
 import { fetchFeed, queryRegion, MEXICO_BBOX } from "./usgs.js";
 import { magnitudeColor, magnitudeRadius, formatMagnitude, formatTimeAgo, filterByMinMagnitude, sortByTimeDesc } from "./format.js";
+import { findNewQuakesInZone } from "./geo.js";
 
 const AUTO_REFRESH_MS = 5 * 60 * 1000;
+const ALERT_ZONE_STORAGE_KEY = "sismos-mx-alert-zone";
 
 // Sismos historicos de referencia mas relevantes para Mexico (coordenadas y datos publicos del USGS).
 const HISTORIC_QUAKES = [
@@ -28,6 +30,51 @@ const refreshBtn = document.getElementById("refresh-btn");
 const statusText = document.getElementById("status-text");
 const quakeList = document.getElementById("quake-list");
 
+const pickZoneBtn = document.getElementById("pick-zone-btn");
+const radiusControl = document.getElementById("radius-control");
+const radiusRange = document.getElementById("radius-range");
+const radiusValue = document.getElementById("radius-value");
+const enableAlertsBtn = document.getElementById("enable-alerts-btn");
+const alertStatus = document.getElementById("alert-status");
+
+let alertZone = JSON.parse(localStorage.getItem(ALERT_ZONE_STORAGE_KEY) ?? "null");
+let pickingZone = false;
+let alertsEnabled = false;
+let lastFeatures = [];
+let seenQuakeIds = new Set();
+let zoneMarker = null;
+let zoneCircle = null;
+
+function drawZoneOnMap() {
+  if (zoneMarker) map.removeLayer(zoneMarker);
+  if (zoneCircle) map.removeLayer(zoneCircle);
+  if (!alertZone) return;
+  zoneMarker = L.marker([alertZone.lat, alertZone.lon]).addTo(map);
+  zoneCircle = L.circle([alertZone.lat, alertZone.lon], {
+    radius: alertZone.radiusKm * 1000,
+    color: "#4da3ff",
+    fillOpacity: 0.08,
+  }).addTo(map);
+}
+
+function saveAlertZone() {
+  localStorage.setItem(ALERT_ZONE_STORAGE_KEY, JSON.stringify(alertZone));
+}
+
+function checkAlerts(features) {
+  if (!alertsEnabled || !alertZone) return;
+  const newInZone = findNewQuakesInZone(features, alertZone, seenQuakeIds);
+  for (const f of newInZone) {
+    const { mag, place, time } = f.properties;
+    if (Notification.permission === "granted") {
+      new Notification(`🌎 Sismo ${formatMagnitude(mag)} en tu zona`, {
+        body: `${place}\n${formatTimeAgo(time)}`,
+      });
+    }
+  }
+  for (const f of features) seenQuakeIds.add(f.id);
+}
+
 function periodToStartTime(period) {
   const now = new Date();
   const ms = { hour: 60 * 60 * 1000, day: 24 * 60 * 60 * 1000, week: 7 * 24 * 60 * 60 * 1000 }[period];
@@ -50,6 +97,8 @@ async function loadQuakes() {
 
     renderQuakes(features);
     statusText.textContent = `${features.length} sismo(s) — actualizado ${formatTimeAgo(Date.now())}`;
+    checkAlerts(features);
+    lastFeatures = features;
     window.__quakeCount = features.length; // gancho para pruebas end-to-end
     window.__quakesLoaded = true;
   } catch (err) {
@@ -123,6 +172,59 @@ historicToggle.addEventListener("change", () => {
     map.removeLayer(historicLayer);
   }
 });
+
+pickZoneBtn.addEventListener("click", () => {
+  pickingZone = !pickingZone;
+  pickZoneBtn.classList.toggle("active", pickingZone);
+  pickZoneBtn.textContent = pickingZone ? "📍 Click en el mapa..." : "📍 Elegir mi zona en el mapa";
+});
+
+map.on("click", (e) => {
+  if (!pickingZone) return;
+  alertZone = { lat: e.latlng.lat, lon: e.latlng.lng, radiusKm: Number(radiusRange.value) };
+  drawZoneOnMap();
+  saveAlertZone();
+  pickingZone = false;
+  pickZoneBtn.classList.remove("active");
+  pickZoneBtn.textContent = "📍 Elegir mi zona en el mapa";
+  radiusControl.hidden = false;
+  enableAlertsBtn.disabled = false;
+  alertStatus.textContent = `Zona guardada (radio ${alertZone.radiusKm} km). Activa las alertas cuando quieras.`;
+});
+
+radiusRange.addEventListener("input", () => {
+  radiusValue.textContent = radiusRange.value;
+  if (alertZone) {
+    alertZone.radiusKm = Number(radiusRange.value);
+    drawZoneOnMap();
+    saveAlertZone();
+  }
+});
+
+enableAlertsBtn.addEventListener("click", async () => {
+  if (!("Notification" in window)) {
+    alertStatus.textContent = "Tu navegador no soporta notificaciones.";
+    return;
+  }
+  const permission = await Notification.requestPermission();
+  if (permission !== "granted") {
+    alertStatus.textContent = "Permiso de notificaciones denegado.";
+    return;
+  }
+  seenQuakeIds = new Set(lastFeatures.map((f) => f.id));
+  alertsEnabled = true;
+  enableAlertsBtn.classList.add("enabled");
+  enableAlertsBtn.textContent = "🔔 Alertas activas";
+  alertStatus.textContent = "Te avisaremos aquí si hay un sismo nuevo en tu zona (mientras esta pestaña esté abierta).";
+});
+
+if (alertZone) {
+  drawZoneOnMap();
+  radiusRange.value = String(alertZone.radiusKm);
+  radiusValue.textContent = String(alertZone.radiusKm);
+  radiusControl.hidden = false;
+  enableAlertsBtn.disabled = false;
+}
 
 renderHistoricQuakes();
 loadQuakes();

@@ -47,6 +47,53 @@ body {
   border-bottom: 1px solid var(--border);
 }
 
+#alert-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+#pick-zone-btn.active {
+  outline: 2px solid var(--accent);
+}
+
+#enable-alerts-btn {
+  background: #2e7d32;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+#enable-alerts-btn:disabled {
+  background: var(--border);
+  color: var(--text-dim);
+  cursor: default;
+}
+
+#enable-alerts-btn.enabled {
+  background: #1b5e20;
+}
+
+#pick-zone-btn,
+#alert-controls button:not(#enable-alerts-btn) {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+#alert-status {
+  color: var(--text-dim);
+}
+
 .control-group {
   display: flex;
   flex-direction: column;

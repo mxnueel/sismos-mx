@@ -9,10 +9,14 @@ let browser;
 let page;
 const consoleErrors = [];
 
+let context;
+
 before(async () => {
   ({ server, url: baseUrl } = await startStaticServer());
   browser = await chromium.launch();
-  page = await browser.newPage();
+  context = await browser.newContext();
+  await context.grantPermissions(["notifications"], { origin: baseUrl });
+  page = await context.newPage();
   page.on("console", (msg) => {
     if (msg.type() === "error") consoleErrors.push(msg.text());
   });
@@ -63,4 +67,31 @@ test("activar sismos historicos agrega marcadores adicionales al mapa", async ()
   await page.waitForTimeout(300);
   const afterCount = await page.evaluate(() => document.querySelectorAll("path.leaflet-interactive").length);
   assert.ok(afterCount > beforeCount, "se esperaban 3 marcadores historicos adicionales");
+});
+
+test("elegir zona en el mapa habilita el control de radio y el boton de alertas", async () => {
+  await page.click("#pick-zone-btn");
+  const isActive = await page.evaluate(() => document.getElementById("pick-zone-btn").classList.contains("active"));
+  assert.ok(isActive, "el boton deberia marcarse activo en modo de seleccion");
+
+  await page.click("#map", { position: { x: 400, y: 250 } });
+
+  const radiusVisible = await page.isVisible("#radius-control");
+  assert.ok(radiusVisible, "el control de radio deberia aparecer tras elegir una zona");
+
+  const alertsBtnEnabled = await page.isEnabled("#enable-alerts-btn");
+  assert.ok(alertsBtnEnabled, "el boton de activar alertas deberia habilitarse tras elegir una zona");
+
+  const zoneSaved = await page.evaluate(() => localStorage.getItem("sismos-mx-alert-zone") !== null);
+  assert.ok(zoneSaved, "la zona deberia guardarse en localStorage");
+});
+
+test("activar alertas cambia el estado visual y el texto de estatus", async () => {
+  await page.click("#enable-alerts-btn");
+  await page.waitForFunction(
+    () => document.getElementById("enable-alerts-btn").classList.contains("enabled"),
+    { timeout: 5_000 }
+  );
+  const status = await page.textContent("#alert-status");
+  assert.match(status, /avisaremos/);
 });

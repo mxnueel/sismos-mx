@@ -19,6 +19,7 @@ Mexico has a real, ongoing relationship with seismic risk — three of the count
 - Minimum magnitude filter
 - Map + synced sidebar list, click either to jump to the other
 - Toggleable historical reference layer for 1985/2017/2022
+- **Zone alerts**: click anywhere on the map to set a point + radius, and get a browser notification when a new earthquake appears within that zone — computed client-side with the Haversine formula, no server involved. Honest limitation: this only fires while the tab stays open. True push notifications (working with the browser closed) need a server watching on your behalf, which this project deliberately doesn't have.
 - Auto-refreshes every 5 minutes
 - Mobile responsive
 
@@ -49,10 +50,11 @@ npx playwright install chromium
 npm test
 ```
 
-17 tests across three levels:
+23 tests across three levels:
 - **`format.test.js`** — pure formatting/filtering/sorting logic
 - **`usgs.test.js`** — real calls against the live USGS API (no mocks): fetches actual recent earthquakes and verifies a real historical M7+ event search in the Mexico bounding box
-- **`e2e.test.js`** — a real headless Chromium browser (Playwright) loading the actual page, confirming Leaflet renders, real earthquake data appears on the map and in the sidebar, filter controls work, and there are zero console errors
+- **`geo.test.js`** — the Haversine distance math behind zone alerts, including a real-world sanity check (CDMX–Guadalajara ≈ 460km)
+- **`e2e.test.js`** — a real headless Chromium browser (Playwright) loading the actual page, confirming Leaflet renders, real earthquake data appears on the map and in the sidebar, filter controls work, the zone-alert flow works end to end (pick a zone on the map, grant notification permission, activate), and there are zero console errors
 
 CI runs the full suite (including the browser-based e2e tests) on every push. A separate workflow deploys straight to GitHub Pages on every push to `master`.
 

@@ -5,8 +5,8 @@
   "description": "Live earthquake map focused on Mexico, built on USGS real-time data — no account, no server, runs entirely as a static site.",
   "type": "module",
   "scripts": {
-    "test": "node --test tests/format.test.js tests/usgs.test.js tests/e2e.test.js",
-    "test:unit": "node --test tests/format.test.js tests/usgs.test.js",
+    "test": "node --test tests/format.test.js tests/usgs.test.js tests/geo.test.js tests/e2e.test.js",
+    "test:unit": "node --test tests/format.test.js tests/usgs.test.js tests/geo.test.js",
     "test:e2e": "node --test tests/e2e.test.js"
   },
   "keywords": [

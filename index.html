@@ -48,6 +48,16 @@
       <span id="status-text"></span>
     </div>
 
+    <div id="alert-controls">
+      <button id="pick-zone-btn" type="button">📍 Elegir mi zona en el mapa</button>
+      <div class="control-group" id="radius-control" hidden>
+        <label for="radius-range">Radio de alerta: <span id="radius-value">150</span> km</label>
+        <input type="range" id="radius-range" min="25" max="500" step="25" value="150" />
+      </div>
+      <button id="enable-alerts-btn" type="button" disabled>🔔 Activar alertas</button>
+      <span id="alert-status"></span>
+    </div>
+
     <main>
       <div id="map"></div>
       <aside id="sidebar">
