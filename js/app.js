@@ -127,7 +127,7 @@ function renderQuakes(features) {
       weight: 1,
     });
     marker.bindPopup(
-      `<strong>${formatMagnitude(mag)}</strong> — ${place}<br>${formatTimeAgo(time)}<br>Profundidad: ${depth?.toFixed(1) ?? "?"} km<br><a href="${url}" target="_blank" rel="noopener">Ver detalle en USGS</a>`
+      `<strong class="mono">${formatMagnitude(mag)}</strong> — ${place}<br>${formatTimeAgo(time)}<br>Profundidad: <span class="mono">${depth?.toFixed(1) ?? "?"} km</span><br><a href="${url}" target="_blank" rel="noopener">Ver detalle en USGS</a>`
     );
     marker.addTo(quakeLayer);
 
