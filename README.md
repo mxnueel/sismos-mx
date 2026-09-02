@@ -10,9 +10,7 @@
 
 A live earthquake map focused on Mexico, built directly on the USGS's real-time feeds — no account, no API key, no backend server. It's a static site: open it and it just works.
 
-## Why
-
-Mexico has a real, ongoing relationship with seismic risk — three of the country's most destructive earthquakes happened on the same calendar date, 32 years apart (Sept 19, 1985, 2017, and 2022), which the map marks as a historical reference layer. Dedicated mobile apps for this exist and have real install bases (My Earthquake Alerts, MyShake), but a fast, no-install, no-tracking web map is a legitimate different shape for the same need.
+Three of Mexico's most destructive earthquakes happened on the same calendar date, 32 years apart (Sept 19, 1985, 2017, and 2022) — the map marks all three as a toggleable historical reference layer. Dedicated mobile apps for this already exist with real install bases (My Earthquake Alerts, MyShake); a fast, no-install, no-tracking web map is a legitimate different shape for the same need.
 
 ## Features
 
