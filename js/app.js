@@ -42,8 +42,32 @@ let pickingZone = false;
 let alertsEnabled = false;
 let lastFeatures = [];
 let seenQuakeIds = new Set();
+let renderedQuakeIds = new Set();
 let zoneMarker = null;
 let zoneCircle = null;
+
+const reduceMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+// A marker materializing by growing out from its center reads as exactly what
+// it represents - a new quake just arrived - instead of just popping into
+// place. Only genuinely new quakes animate; ones already on the map (e.g.
+// still present after the 5-minute auto-refresh) are added at full size
+// immediately, so the whole map doesn't re-pulse every refresh.
+function animateMarkerIn(marker, finalRadius) {
+  if (reduceMotionQuery.matches) {
+    marker.setStyle({ radius: finalRadius, fillOpacity: 0.6 });
+    return;
+  }
+  const duration = 450;
+  const start = performance.now();
+  function tick(now) {
+    const t = Math.min(1, (now - start) / duration);
+    const eased = 1 - Math.pow(1 - t, 3); // decelerates without overshoot (damping=1, no gesture/momentum behind this)
+    marker.setStyle({ radius: finalRadius * eased, fillOpacity: 0.6 * eased });
+    if (t < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
 
 function drawZoneOnMap() {
   if (zoneMarker) map.removeLayer(zoneMarker);
@@ -114,22 +138,27 @@ function renderQuakes(features) {
   quakeList.innerHTML = "";
 
   const sorted = sortByTimeDesc(features);
+  const nowRenderedIds = new Set();
 
   sorted.forEach((feature, index) => {
     const [lon, lat, depth] = feature.geometry.coordinates;
     const { mag, place, time, url } = feature.properties;
+    const isNew = !renderedQuakeIds.has(feature.id);
+    nowRenderedIds.add(feature.id);
 
+    const finalRadius = magnitudeRadius(mag);
     const marker = L.circleMarker([lat, lon], {
-      radius: magnitudeRadius(mag),
+      radius: isNew ? 0 : finalRadius,
       color: magnitudeColor(mag),
       fillColor: magnitudeColor(mag),
-      fillOpacity: 0.6,
+      fillOpacity: isNew ? 0 : 0.6,
       weight: 1,
     });
     marker.bindPopup(
       `<strong class="mono">${formatMagnitude(mag)}</strong> — ${place}<br>${formatTimeAgo(time)}<br>Profundidad: <span class="mono">${depth?.toFixed(1) ?? "?"} km</span><br><a href="${url}" target="_blank" rel="noopener">Ver detalle en USGS</a>`
     );
     marker.addTo(quakeLayer);
+    if (isNew) animateMarkerIn(marker, finalRadius);
 
     const li = document.createElement("li");
     li.className = "quake-item";
@@ -141,6 +170,8 @@ function renderQuakes(features) {
     });
     quakeList.appendChild(li);
   });
+
+  renderedQuakeIds = nowRenderedIds;
 }
 
 function renderHistoricQuakes() {
